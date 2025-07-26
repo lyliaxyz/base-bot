@@ -1,7 +1,7 @@
-# 📁 Base script bot whatsapp
+# 📁 Proyek Bot WhatsApp Fauzialifatah
 
 ### 
-**Daftar script**
+**Untuk membuat bot WhatsApp berbasis Baileys yang rapi dan mudah dikelola, penting untuk memiliki tata letak folder dan file yang terstruktur. Ini membantu Anda dan orang lain memahami di mana setiap bagian kode berada.**
 ```bash
 
 ├── package.json
