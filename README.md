@@ -1,7 +1,7 @@
-# 📁 Proyek Bot WhatsApp Fauzialifatah
+# 📁 Bot WhatsApp Fauzialifatah
 
 ### 
-**Untuk membuat bot WhatsApp berbasis Baileys yang rapi dan mudah dikelola, penting untuk memiliki tata letak folder dan file yang terstruktur. Ini membantu Anda dan orang lain memahami di mana setiap bagian kode berada.**
+**Untuk membuat bot WhatsApp berbasis Baileys yang rapi dan mudah dikelola, penting untuk memiliki tata letak folder dan file yang terstruktur. Ini membantu Anda dan orang lain memahami di mana setiap bagian kode berada. Struktur ini mendukung fleksibilitas dalam menggunakan ESM (import/export) dan CJS (require/module.exports) dalam proyek Node.js Anda.**
 ```bash
 
 ├── package.json
