@@ -9,6 +9,9 @@
 @param {import('@whiskeysockets/baileys').WASocket} plug.client Objek client Baileys untuk interaksi
 ```
 
+### 
+**Handler untuk perintah rename**
+```bash
 logger: P({ level: 'silent' }): Ini mengatur sistem pencatatan aktivitas (logging) bot Anda. P adalah alias untuk pino, logger berkinerja tinggi. Dengan level: 'silent', bot tidak akan menampilkan log apapun ke konsol, menjaga tampilan terminal Anda tetap bersih. Anda bisa mengubahnya ke 'info' atau 'debug' jika butuh melihat lebih banyak detail.
 
 printQRInTerminal: true: Pengaturan ini memberitahu Baileys untuk menampilkan QR Code langsung di terminal Anda. Ini krusial untuk proses login awal bot atau saat sesi login Anda kedaluwarsa. Anda perlu memindai QR Code ini menggunakan aplikasi WhatsApp di ponsel Anda.
@@ -26,3 +29,4 @@ markOnlineOnConnect: false: Dengan pengaturan ini, bot Anda tidak akan otomatis 
 emitOwnEvents: true: Ini menentukan apakah Baileys akan memancarkan event untuk pesan atau status yang dibuat oleh bot itu sendiri. Ini bisa berguna untuk debugging atau skenario di mana bot perlu memproses pesannya sendiri.
 
 patchMessageBeforeSending: (msg) => { if (msg.contextInfo) delete msg.contextInfo.mentionedJid; return msg; }: Ini adalah fungsi kustom yang dijalankan sebelum setiap pesan dikirim. Baris if (msg.contextInfo) delete msg.contextInfo.mentionedJid; adalah perbaikan umum yang direkomendasikan untuk menghindari bug atau crash terkait properti mentionedJid di Baileys, terutama saat membalas pesan.
+```
