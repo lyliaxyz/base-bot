@@ -1,5 +1,18 @@
 # 📁 Base script bot whatsapp
-###
+
+### 
+**Daftar script**
+```bash
+
+├── package.json
+├── index.js                 <-- File utama bot Anda (titik masuk)
+├── sesi/      <-- Folder untuk menyimpan sesi WhatsApp (otomatis dibuat)
+│   ├── creds.json
+│   └── ... (file sesi lainnya)
+└── command/                <-- Folder untuk semua perintah (plugins) bot
+    ├── menu.js             <-- Contoh plugin untuk perintah 'menu'
+    └── ... (plugin lainnya)
+```
 
 ### 
 **Handler untuk perintah rename**
