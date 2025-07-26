@@ -1,11 +1,16 @@
 # 📁 Base script bot whatsapp
 
-## ✨ Tujuan Rename
+---
 
-- Memperjelas nama file agar mudah dipahami
-- Menyesuaikan standar penamaan (naming convention)
-- Menghindari konflik nama antar file
-- Menyesuaikan struktur proyek dengan kebutuhan terbaru
+## 🧪 Cara Melakukan Rename
+
+### 🖱️ 1. Rename Secara Manual (GUI)
+> Cocok untuk pengguna Windows/Mac:
+- Klik kanan file atau folder
+- Pilih **Rename / Ubah Nama**
+- Ketik nama baru dan tekan `Enter`
+
+---
 
 ### 
 **Handler untuk perintah rename**
