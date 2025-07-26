@@ -23,4 +23,4 @@
 @param {import('@whiskeysockets/baileys').WASocket} plug.client Objek client Baileys untuk interaksi
 ```
 
-[Hallo](https://whatsapp.com/channel/0029VawsCnQ9mrGkOuburC1z)
+[Saluran](https://whatsapp.com/channel/0029VawsCnQ9mrGkOuburC1z)
