@@ -62,7 +62,7 @@ async function connectToWhatsApp() {
         currentSock = null;
     }
 
-    const { state, saveCreds } = await useMultiFileAuthState('baileys_auth_info');
+    const { state, saveCreds } = await useMultiFileAuthState('sesi');
 
     const sock = makeWASocket({
       logger: P({ level: 'silent' }),
