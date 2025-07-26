@@ -1,16 +1,5 @@
 # 📁 Base script bot whatsapp
 
----
-
-## 🧪 Cara Melakukan Rename
-
-### 🖱️ 1. Rename Secara Manual (GUI)
-> Cocok untuk pengguna Windows/Mac:
-- Klik kanan file atau folder
-- Pilih **Rename / Ubah Nama**
-- Ketik nama baru dan tekan `Enter`
-
----
 
 ### 
 **Handler untuk perintah rename**
