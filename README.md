@@ -22,3 +22,5 @@
 @param {string} plug.text Isi pesan yang diketik oleh pengguna.
 @param {import('@whiskeysockets/baileys').WASocket} plug.client Objek client Baileys untuk interaksi
 ```
+
+https://github.com/username/nama-repo/blob/main/rename.md
