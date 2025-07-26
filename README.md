@@ -1,5 +1,12 @@
 # 📁 Base script bot whatsapp
 
+## ✨ Tujuan Rename
+
+- Memperjelas nama file agar mudah dipahami
+- Menyesuaikan standar penamaan (naming convention)
+- Menghindari konflik nama antar file
+- Menyesuaikan struktur proyek dengan kebutuhan terbaru
+
 ### 
 **Handler untuk perintah rename**
 ```bash
