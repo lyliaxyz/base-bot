@@ -1,0 +1,19 @@
+{
+  "name": "Fauzialifatah",
+  "version": "1.0.0",
+  "description": "ESM and CJS error? fix sendiri",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "Fauzialifatah ganteng",
+  "license": "ISC",
+  "dependencies": {
+    "@hapi/boom": "^10.0.1",
+    "@whiskeysockets/baileys": "^6.7.18",
+    "pino": "^7.11.0",
+    "qrcode-terminal": "^0.12.0"
+  }
+}
