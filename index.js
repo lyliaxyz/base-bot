@@ -9,18 +9,15 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { pathToFileURL } from 'url';
+
+import globalConfig from './settings/config.js';
 
 let currentSock = null;
 
 const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-
-const cjsStyleData = {
-    message: "Data dalam gaya CommonJS"
-};
-
-export const esmMessage = "Pesan dari ES Module export";
 
 console.log('\n=====================================');
 console.log('         BOT WHATSAPP DIMULAI        ');
@@ -35,7 +32,8 @@ const pluginsLoader = async (directory) => {
         const filePath = path.join(directory, file);
         if (filePath.endsWith(".js")) {
             try {
-                const pluginModule = await import(filePath);
+                const fileUrl = pathToFileURL(filePath).href;
+                const pluginModule = await import(fileUrl);
                 const pluginHandler = pluginModule.default;
 
                 if (typeof pluginHandler === 'function' && pluginHandler.command) {
@@ -53,9 +51,10 @@ const pluginsLoader = async (directory) => {
 
 async function connectToWhatsApp() {
     if (currentSock) {
-        console.log('[RESTART] Menutup koneksi WhatsApp sebelumnya...');
         try {
-            await currentSock.end();
+            if (currentSock && typeof currentSock.end === 'function') {
+                await currentSock.end();
+            }
         } catch (error) {
             console.log('[RESTART ERROR] Gagal menutup koneksi sebelumnya:', error);
         }
@@ -65,18 +64,18 @@ async function connectToWhatsApp() {
     const { state, saveCreds } = await useMultiFileAuthState('sesi');
 
     const sock = makeWASocket({
-      logger: P({ level: 'silent' }),
-      printQRInTerminal: true,
-      auth: state,
-      browser: Browsers.macOS('Desktop'),
-      msgRetryCounterMap: {},
-      retryRequestDelayMs: 250,
-      markOnlineOnConnect: false,
-      emitOwnEvents: true,
-      patchMessageBeforeSending: (msg) => {
-        if (msg.contextInfo) delete msg.contextInfo.mentionedJid;
-        return msg;
-      }
+        logger: P({ level: 'silent' }),
+        printQRInTerminal: true,
+        auth: state,
+        browser: Browsers.macOS('Desktop'),
+        msgRetryCounterMap: {},
+        retryRequestDelayMs: 250,
+        markOnlineOnConnect: false,
+        emitOwnEvents: true,
+        patchMessageBeforeSending: (msg) => {
+            if (msg.contextInfo) delete msg.contextInfo.mentionedJid;
+            return msg;
+        }
     });
 
     currentSock = sock;
@@ -97,32 +96,18 @@ async function connectToWhatsApp() {
         if (connection === 'close') {
             let reason = new Boom(lastDisconnect?.error)?.output?.statusCode;
             console.log(`[KONEKSI] Terputus. Status Kode: ${reason}`);
-            
-            if (currentSock === null && reason !== DisconnectReason.loggedOut && reason !== DisconnectReason.badSession) {
-                console.log('[RESTART] Koneksi ditutup karena file utama diubah, menunggu proses restart.');
-                return;
-            }
 
-            if (reason === DisconnectReason.badSession) {
-                console.log('[PERINGATAN] Sesi buruk! Hapus folder "baileys_auth_info" dan scan ulang.');
+            if (reason === DisconnectReason.loggedOut || reason === DisconnectReason.badSession) {
+                console.log('[PERINGATAN] Sesi buruk atau logout! Hapus folder "sesi" dan scan ulang untuk memulai sesi baru.');
                 connectToWhatsApp();
-            } else if (reason === DisconnectReason.connectionClosed) {
-                console.log('[INFO] Koneksi ditutup, mencoba menyambungkan ulang...');
-                connectToWhatsApp();
-            } else if (reason === DisconnectReason.connectionLost) {
-                console.log('[INFO] Koneksi terputus, mencoba menyambungkan ulang...');
-                connectToWhatsApp();
-            } else if (reason === DisconnectReason.loggedOut) {
-                console.log('[PERINGATAN] Perangkat logout! Hapus folder "baileys_auth_info" dan scan ulang.');
-                connectToWhatsApp();
-            } else if (reason === DisconnectReason.restartRequired) {
-                console.log('[INFO] Restart diperlukan, mencoba menyambungkan ulang...');
-                connectToWhatsApp();
-            } else if (reason === DisconnectReason.timedOut) {
-                console.log('[INFO] Timeout, mencoba menyambungkan ulang...');
+            } else if (reason === DisconnectReason.connectionClosed ||
+                reason === DisconnectReason.connectionLost ||
+                reason === DisconnectReason.restartRequired ||
+                reason === DisconnectReason.timedOut) {
+                console.log('[INFO] Koneksi terputus/restart diperlukan, mencoba menyambungkan ulang...');
                 connectToWhatsApp();
             } else {
-                console.log(`[ERROR] Koneksi ditutup: ${reason}, ${lastDisconnect?.error}`);
+                console.log(`[ERROR] Koneksi ditutup dengan alasan tidak terduga: ${reason}, ${lastDisconnect?.error}`);
                 connectToWhatsApp();
             }
         } else if (connection === 'open') {
@@ -142,37 +127,34 @@ async function connectToWhatsApp() {
                     } else if (msg.message.extendedTextMessage?.text) {
                         messageBody = msg.message.extendedTextMessage.text;
                     } else if (msg.message.imageMessage?.caption) {
-                        messageBody = msg.message.imageMessage?.caption;
+                        messageBody = msg.message.imageMessage.caption;
                     } else if (msg.message.videoMessage?.caption) {
                         messageBody = msg.message.videoMessage.caption;
-                    }
-                    else if (msg.message.listMessage?.description) {
-                           messageBody = msg.message.listMessage.description;
+                    } else if (msg.message.listMessage?.description) {
+                        messageBody = msg.message.listMessage.description;
                     } else if (msg.message.buttonsMessage?.content?.text) {
-                           messageBody = msg.message.buttonsMessage.content.text;
+                        messageBody = msg.message.buttonsMessage.content.text;
                     } else if (msg.message.templateButtonReplyMessage?.selectedDisplayText) {
-                           messageBody = msg.message.templateButtonReplyMessage.selectedDisplayText;
+                        messageBody = msg.message.templateButtonReplyMessage.selectedDisplayText;
                     } else if (msg.message.reactionMessage?.text) {
-                           messageBody = msg.message.reactionMessage.text;
+                        messageBody = msg.message.reactionMessage.text;
                     }
 
                     const sender = msg.key.remoteJid;
                     const lowerCaseBody = messageBody.toLowerCase().trim();
-                    const command = lowerCaseBody.split(' ')[0];
 
-                    if (pluginsDisable) {
-                           console.log(`[INFO] Plugin dinonaktifkan. Pesan tidak diproses sebagai perintah dari ${sender}.`);
-                           continue;
-                    }
+                    const parts = lowerCaseBody.split(' ');
+                    const command = parts[0];
+                    const args = parts.slice(1).join(' ');
 
                     const plug = {
                         sock,
                         command: command,
                         text: messageBody,
+                        args: args,
                         isBot: msg.key.fromMe,
-                        cjsStyleData: cjsStyleData,
-                        esmMessage: esmMessage,
                         m: msg,
+                        config: globalConfig
                     };
 
                     let commandHandled = false;
@@ -206,17 +188,5 @@ async function connectToWhatsApp() {
     sock.ev.on('creds.update', saveCreds);
 }
 
+
 connectToWhatsApp();
-
-let fileToWatch = require.resolve(__filename)
-
-fs.watchFile(fileToWatch, () => {
-    fs.unwatchFile(fileToWatch);
-    console.log(`\x1b[0;32m${__filename}\x1b[1;32m updated! Merestart bot...\x1b[0m`);
-    if (currentSock) {
-        currentSock.end().catch(e => console.error("[RESTART ERROR] Gagal menutup koneksi socket:", e));
-        currentSock = null;
-    }
-    delete require.cache[fileToWatch]; 
-    require(fileToWatch); 
-});
