@@ -26,7 +26,7 @@
 ```
 
 ### 
-**Handler untuk perintah rename**
+**Parameter yang Diteruskan ke Plugin Handler:**
 ```bash
 @param {Object} m: Objek pesan mentah dari Baileys.
 @param {Object} plug: Objek konteks yang diteruskan ke plugin, berisi properti berikut:
