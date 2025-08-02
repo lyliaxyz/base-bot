@@ -25,10 +25,16 @@
 ### 
 **Handler untuk perintah rename**
 ```bash
-@param {Object} m Objek pesan mentah dari Baileys.
-@param {Object} plug Objek konteks yang diteruskan ke plugin.
-@param {string} plug.text Isi pesan yang diketik oleh pengguna.
-@param {import('@whiskeysockets/baileys').WASocket} plug.client Objek client Baileys untuk interaksi
+@param {Object} m: Objek pesan mentah dari Baileys.
+@param {Object} plug: Objek konteks yang diteruskan ke plugin, berisi properti berikut:
+plug.sock: Objek WASocket dari Baileys untuk interaksi (mengirim pesan, dll.).
+plug.command: String nama perintah yang terdeteksi.
+plug.text: Isi pesan lengkap yang diketik oleh pengguna.
+plug.args: Argumen setelah nama perintah.
+plug.isBot: Boolean, true jika pesan berasal dari bot itu sendiri.
+plug.m: Objek pesan mentah yang sama dengan parameter m (disediakan untuk kemudahan).
+plug.config: Objek konfigurasi global bot dari settings/config.js.
+plug.isGroup: Boolean, true jika pesan berasal dari grup.
 ```
 
 [Saluran](https://whatsapp.com/channel/0029VawsCnQ9mrGkOuburC1z)
