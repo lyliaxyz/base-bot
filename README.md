@@ -4,16 +4,22 @@
 **Untuk membuat bot WhatsApp berbasis Baileys yang rapi dan mudah dikelola, penting untuk memiliki tata letak folder dan file yang terstruktur. Ini membantu Anda dan orang lain memahami di mana setiap bagian kode berada. Struktur ini mendukung fleksibilitas dalam menggunakan ESM (import/export) dan CJS (require/module.exports) dalam proyek Node.js Anda.**
 ```bash
 
+/base-bot/
+├── index.js
 ├── package.json
-├── index.js                 <-- File utama bot Anda (titik masuk)
-├── settings
-│   └── config.js
-├── sesi/      <-- Folder untuk menyimpan sesi WhatsApp (otomatis dibuat)
-│   ├── creds.json
-│   └── ... (file sesi lainnya)
-└── command/                <-- Folder untuk semua perintah (plugins) bot
-    ├── menu.js             <-- Contoh plugin untuk perintah 'menu'
-    └── ... (plugin lainnya)
+├── sesi/ (folder ini akan dibuat otomatis oleh Baileys)
+├── settings/
+│   ├── config.js
+│   └── colors.js
+├── handler.js
+├── command/
+│   ├── flux.js
+│   ├── menu.js
+│   └── deepai.js
+└── lib/
+    └── scrape/
+        ├── deepai-api.js
+        └── fluxai-api.js 
 ```
 
 ### 
