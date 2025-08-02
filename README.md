@@ -3,6 +3,8 @@
 ### 
 **​​Untuk membuat bot WhatsApp berbasis Baileys yang rapi dan mudah dikelola, penting untuk memiliki tata letak folder dan file yang terstruktur. Ini membantu Anda dan orang lain memahami di mana setiap bagian kode berada. Struktur ini mendukung fleksibilitas dalam menggunakan ESM (import/export) dan CJS (require/module.exports) dalam proyek Node.js Anda.
 ​Bot ini dirancang untuk berjalan dengan Node.js versi 24 atau yang lebih baru, yang mendukung fungsionalitas QR code untuk koneksi WhatsApp.**
+
+**Bot ini dirancang untuk berjalan dengan Node.js versi 24 atau yang lebih baru, yang mendukung fungsionalitas QR code untuk koneksi WhatsApp.**
 ```bash
 
 /base-bot/
