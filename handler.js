@@ -1,14 +1,57 @@
+import util from 'util';
+import colors from './settings/colors.js';
+import { 
+    logHeader, 
+    logFooter, 
+    logIncomingMessage, 
+    logNonCommand, 
+    logCommandDetection, 
+    logCommandStatus, 
+    logWarning, 
+    logError, 
+    logLimitInfo, 
+    logLimitBlocked
+} from './settings/logger.js';
+
 export const setupMessageHandler = (sock, loadedPlugins, globalConfig, userLimits, checkAndApplyLimit) => {
     sock.ev.on('messages.upsert', async ({ messages, type }) => {
         if (type === 'notify') {
             const now = Date.now();
+            const botNumber = sock.user.id.replace(/:[0-9]+/, '');
 
             for (let msg of messages) {
                 if (msg.key.fromMe || !msg.message) {
                     continue;
                 }
+                
+                logHeader('FAUZIALIFATAH');
 
-                const isGroup = msg.key.remoteJid.endsWith('@g.us');
+                const senderJid = msg.key.remoteJid;
+                const senderLid = msg.key.chat?.lid; 
+                const sender = senderLid || senderJid; 
+                const isGroup = senderLid ? true : senderJid.endsWith('@g.us');
+
+                const groupMetadata = isGroup ? await sock.groupMetadata(sender).catch(() => ({})) : {};
+                const groupName = isGroup ? groupMetadata.subject || '' : '';
+                const participants = isGroup
+                    ? groupMetadata.participants?.map(p => {
+                        const admin = p.admin === 'superadmin' ? 'superadmin' : p.admin === 'admin' ? 'admin' : null;
+                        return { id: p.id || null, lid: p.lid || null, admin, full: p };
+                    }) || []
+                    : [];
+                const groupOwner = isGroup
+                    ? participants.find(p => p.admin === 'superadmin')?.id || ''
+                    : '';
+                const groupAdmins = participants
+                    .filter(p => p.admin === 'admin' || p.admin === 'superadmin')
+                    .map(p => p.id);
+                const isBotAdmins = isGroup ? groupAdmins.includes(botNumber) : false;
+                const isAdmins = isGroup ? groupAdmins.includes(msg.key.participant || msg.key.remoteJid) : false;
+                const isGroupOwner = isGroup ? groupOwner === (msg.key.participant || msg.key.remoteJid) : false;
+                const userLid = (() => {
+                    const p = participants.find(p => p.id === (msg.key.participant || msg.key.remoteJid));
+                    return p?.lid || null;
+                })();
 
                 let messageBody = '';
                 if (msg.message.conversation) {
@@ -31,21 +74,23 @@ export const setupMessageHandler = (sock, loadedPlugins, globalConfig, userLimit
                     continue;
                 }
 
-                const sender = msg.key.remoteJid;
-                const lowerCaseBody = messageBody.toLowerCase().trim();
-
+                const logSender = senderLid ? `${colors.bright}${colors.cyan}LID:${colors.reset} ${senderLid}` : `${colors.bright}${colors.cyan}JID:${colors.reset} ${sender}`;
+                const logType = Object.keys(msg.message)[0];
+                logIncomingMessage(logSender, logType, messageBody, isGroup);
+                
                 let command = '';
                 let args = '';
-
                 const prefix = globalConfig.prefix;
 
-                if (lowerCaseBody.startsWith(prefix)) {
-                    const contentWithoutPrefix = lowerCaseBody.slice(prefix.length).trim();
+                if (messageBody.toLowerCase().trim().startsWith(prefix)) {
+                    const contentWithoutPrefix = messageBody.toLowerCase().trim().slice(prefix.length).trim();
                     const parts = contentWithoutPrefix.split(' ');
                     command = parts[0];
                     args = parts.slice(1).join(' ');
+                    logCommandDetection(command, args);
                 } else {
-                    console.log(`[INFO] Pesan non-perintah (tanpa prefix) dari ${sender}: "${messageBody}"`);
+                    logNonCommand(messageBody);
+                    logFooter();
                     continue;
                 }
 
@@ -57,15 +102,22 @@ export const setupMessageHandler = (sock, loadedPlugins, globalConfig, userLimit
                     isBot: msg.key.fromMe,
                     m: msg,
                     config: globalConfig,
-                    isGroup: isGroup
+                    isGroup: isGroup,
+                    client: sock,
+                    groupMetadata,
+                    groupName,
+                    participants,
+                    groupOwner,
+                    groupAdmins,
+                    isBotAdmins,
+                    isAdmins,
+                    isGroupOwner,
+                    userLid,
+                    botNumber
                 };
 
                 let commandHandled = false;
                 let matchedCommand = '';
-
-                console.log(`[PESAN MASUK] Dari: ${sender} | Tipe: ${Object.keys(msg.message)[0]} | Body: "${messageBody}" | Group: ${isGroup ? 'Ya' : 'Tidak'}`);
-                console.log(`[DETEKSI PERINTAH] Command: "${command}" | Args: "${args}"`);
-
 
                 for (let pluginHandler of loadedPlugins) {
                     if (typeof pluginHandler === 'function' && pluginHandler.command) {
@@ -73,16 +125,18 @@ export const setupMessageHandler = (sock, loadedPlugins, globalConfig, userLimit
 
                         const foundCommand = commandsToMatch.find(cmd => cmd === command);
                         if (foundCommand) {
+                            logCommandStatus('running', foundCommand);
+
                             if (pluginHandler.group && !isGroup) {
                                 await sock.sendMessage(sender, { text: globalConfig.mess.ingroup }, { quoted: msg });
-                                console.log(`[INFO PERINTAH] Perintah "${foundCommand}" hanya untuk grup, tapi digunakan di chat pribadi oleh ${sender}.`);
+                                logWarning(`Perintah "${foundCommand}" hanya untuk grup. Ditolak.`);
                                 commandHandled = true;
                                 break;
                             }
 
                             if (pluginHandler.private && isGroup) {
                                 await sock.sendMessage(sender, { text: globalConfig.mess.privateChat }, { quoted: msg });
-                                console.log(`[INFO PERINTAH] Perintah "${foundCommand}" hanya untuk chat pribadi, tapi digunakan di grup oleh ${sender}.`);
+                                logWarning(`Perintah "${foundCommand}" hanya untuk chat pribadi. Ditolak.`);
                                 commandHandled = true;
                                 break;
                             }
@@ -90,31 +144,25 @@ export const setupMessageHandler = (sock, loadedPlugins, globalConfig, userLimit
                             if (globalConfig.limit.enable && pluginHandler.limit) {
                                 const userJid = msg.key.participant || msg.key.remoteJid;
                                 if (userJid.replace(/@.+/, '') === globalConfig.owner) {
-                                     console.log(`[INFO LIMIT] Owner ${userJid} menggunakan perintah "${foundCommand}", tanpa limit.`);
+                                     logLimitInfo(`Owner (${userJid}) menggunakan perintah tanpa limit.`);
                                 } else if (!checkAndApplyLimit(userJid)) {
                                     const userData = userLimits[userJid];
                                     const timeDiff = userData.lastUsed + globalConfig.limit.resetIntervalMs - now;
                                     const remainingHours = Math.ceil(timeDiff / (60 * 60 * 1000));
                                     const remainingMinutes = Math.ceil(timeDiff / (60 * 1000));
                                     
-                                    let remainingTimeMessage;
-                                    if (remainingHours > 0) {
-                                        remainingTimeMessage = `${remainingHours} jam`;
-                                    } else {
-                                        remainingTimeMessage = `${remainingMinutes} menit`;
-                                    }
-
+                                    let remainingTimeMessage = remainingHours > 0 ? `${remainingHours} jam` : `${remainingMinutes} menit`;
                                     let limitMessage = globalConfig.limit.message
                                         .replace('%maxDaily%', globalConfig.limit.maxDaily)
                                         .replace('%resetHours%', globalConfig.limit.resetIntervalMs / (60 * 60 * 1000))
                                         .replace('%remainingTime%', remainingTimeMessage);
 
                                     await sock.sendMessage(sender, { text: limitMessage }, { quoted: msg });
-                                    console.log(`[LIMIT TERDAHLANG] Pengguna ${userJid} mencapai limit untuk perintah "${foundCommand}".`);
+                                    logLimitBlocked(`Pengguna ${userJid} mencapai limit untuk perintah "${foundCommand}".`);
                                     commandHandled = true;
                                     break;
                                 } else {
-                                     console.log(`[INFO LIMIT] Pengguna ${userJid} menggunakan perintah "${foundCommand}", sisa limit: ${globalConfig.limit.maxDaily - userLimits[userJid].count}`);
+                                     logLimitInfo(`Pengguna ${userJid} menggunakan perintah "${foundCommand}". Sisa: ${globalConfig.limit.maxDaily - userLimits[userJid].count}`);
                                 }
                             }
 
@@ -122,17 +170,21 @@ export const setupMessageHandler = (sock, loadedPlugins, globalConfig, userLimit
                                 await pluginHandler(msg, plug);
                                 commandHandled = true;
                                 matchedCommand = foundCommand;
-                                console.log(`[PERINTAH DITERIMA] "${matchedCommand}" dari ${sender}`);
+                                logCommandStatus('success', matchedCommand);
                                 break;
                             } catch (error) {
-                                console.error(`[ERROR EXECUTION] Gagal menjalankan perintah "${foundCommand}" dari ${sender}:`, error);
+                                logError(`Gagal menjalankan perintah "${foundCommand}":`, error);
                                 await sock.sendMessage(sender, { text: `Maaf, terjadi kesalahan saat menjalankan perintah "${foundCommand}". Silakan coba lagi nanti.` }, { quoted: msg });
                             }
                         }
                     }
                 }
+                
+                if (!commandHandled) {
+                   logCommandStatus('notfound', command);
+                }
+                logFooter();
             }
         }
     });
 };
-
