@@ -27,16 +27,12 @@
 ### 
 **Parameter yang Diteruskan ke Plugin Handler:**
 ```bash
-@param {Object} m: Objek pesan mentah dari Baileys.
-@param {Object} plug: Objek konteks yang diteruskan ke plugin, berisi properti berikut:
-plug.sock: Objek WASocket dari Baileys untuk interaksi (mengirim pesan, dll.).
-plug.command: String nama perintah yang terdeteksi.
-plug.text: Isi pesan lengkap yang diketik oleh pengguna.
-plug.args: Argumen setelah nama perintah.
-plug.isBot: Boolean, true jika pesan berasal dari bot itu sendiri.
-plug.m: Objek pesan mentah yang sama dengan parameter m (disediakan untuk kemudahan).
-plug.config: Objek konfigurasi global bot dari settings/config.js.
-plug.isGroup: Boolean, true jika pesan berasal dari grup.
+const senderJid = msg.key.remoteJid;
+const senderLid = msg.key.chat?.lid; 
+const sender = senderLid || senderJid; 
+const isGroup = senderLid ? true : senderJid.endsWith('@g.us');
+
+const groupMetadata = isGroup ? await sock.groupMetadata(sender).catch(() => ({})) : {};
 ```
 
 [Saluran](https://whatsapp.com/channel/0029VawsCnQ9mrGkOuburC1z)
